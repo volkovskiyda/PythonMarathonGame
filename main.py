@@ -10,12 +10,36 @@ from dataclasses import dataclass
 import os
 
 @dataclass
-class Movable:
+class Object:
     surface: Surface
     rect: Rect
+
+@dataclass
+class Movable(Object):
     move_by: Vector2
 
     def move(self): self.rect = self.rect.move(self.move_by)
+
+@dataclass
+class Player(Object):
+    player_image_index: int = 0
+
+    def __init__(self, surface: Surface):
+        self.surface = surface
+        self.rect = self.surface.get_rect().move(10, HEIGHT / 2)
+
+    def move_up(self):
+        if self.rect.top > 0: self.rect = self.rect.move([0,-7])
+    def move_down(self):
+        if self.rect.bottom < HEIGHT: self.rect = self.rect.move([0,7])
+    def move_left(self):
+        if self.rect.left > 0: self.rect = self.rect.move([-7,0])
+    def move_right(self):
+        if self.rect.right < WIDTH: self.rect = self.rect.move([7,0])
+
+    def anim(self):
+        self.surface = pygame.image.load(os.path.join(GOOSE_ANIM_PATH, PLAYER_IMAGES[self.player_image_index]))
+        self.player_image_index = (self.player_image_index + 1) % len(PLAYER_IMAGES)
 
 pygame.init()
 
@@ -34,25 +58,19 @@ bg_x1 = 0
 bg_x2 = bg.get_width()
 bg_move = 3
 
-GOOSE_ANIM_PATH = "assets\\goose_anim"
+GOOSE_ANIM_PATH = "assets/goose_anim"
 PLAYER_IMAGES = os.listdir(GOOSE_ANIM_PATH)
 
-player = pygame.image.load('assets\\player.png').convert_alpha()
-player_rect = player.get_rect().move(10, HEIGHT / 2)
-
-player_move_down = [0,7]
-player_move_up = [0,-7]
-player_move_right = [7,0]
-player_move_left = [-7,0]
+player = Player(pygame.image.load('assets/player.png').convert_alpha())
 
 def create_enemy():
-    enemy = pygame.image.load('assets\\enemy.png').convert_alpha()
+    enemy = pygame.image.load('assets/enemy.png').convert_alpha()
     enemy_rect = pygame.Rect(WIDTH, random.randint(100, HEIGHT -100), *enemy.get_size())
     enemy_move = [random.randint(-8, -4), 0]
     return Movable(enemy, enemy_rect, enemy_move)
 
 def create_bonus():
-    bonus = pygame.image.load('assets\\bonus.png').convert_alpha()
+    bonus = pygame.image.load('assets/bonus.png').convert_alpha()
     bonus_rect = pygame.Rect(random.randint(300, WIDTH - 300), 0, *bonus.get_size())
     bonus_move = [0, random.randint(2, 4)]
     return Movable(bonus, bonus_rect, bonus_move)
@@ -69,8 +87,6 @@ enemies = []
 bonuses = []
 score = 0
 
-player_image_index = 0
-
 playing = True
 
 while playing:
@@ -79,9 +95,7 @@ while playing:
         if event.type == QUIT: playing = False
         if event.type == CREATE_ENEMY: enemies.append(create_enemy())
         if event.type == CREATE_BONUS: bonuses.append(create_bonus())
-        if event.type == CHANGE_IMAGE:
-            player = pygame.image.load(os.path.join(GOOSE_ANIM_PATH, PLAYER_IMAGES[player_image_index]))
-            player_image_index = (player_image_index + 1) % len(PLAYER_IMAGES)
+        if event.type == CHANGE_IMAGE: player.anim()
     
     bg_x1 -= bg_move
     bg_x2 -= bg_move
@@ -94,28 +108,28 @@ while playing:
 
     keys = pygame.key.get_pressed()
 
-    if keys[K_DOWN] and player_rect.bottom < HEIGHT: player_rect = player_rect.move(player_move_down)
-    if keys[K_UP] and player_rect.top > 0: player_rect = player_rect.move(player_move_up)
-    if keys[K_RIGHT] and player_rect.right < WIDTH: player_rect = player_rect.move(player_move_right)
-    if keys[K_LEFT] and player_rect.left > 0: player_rect = player_rect.move(player_move_left)
+    if keys[K_UP]: player.move_up()
+    if keys[K_DOWN]: player.move_down()
+    if keys[K_LEFT]: player.move_left()
+    if keys[K_RIGHT]: player.move_right()
 
     for enemy in enemies:
         enemy.move()
         main_display.blit(enemy.surface, enemy.rect)
 
-        if player_rect.colliderect(enemy.rect):
+        if player.rect.colliderect(enemy.rect):
             playing = False
 
     for bonus in bonuses:
         bonus.move()
         main_display.blit(bonus.surface, bonus.rect)
 
-        if player_rect.colliderect(bonus.rect):
+        if player.rect.colliderect(bonus.rect):
             bonuses.pop(bonuses.index(bonus))
             score += 1
 
     main_display.blit(FONT.render(str(score), True, COLOR_BLACK), (WIDTH - 50, 20))
-    main_display.blit(player, player_rect)
+    main_display.blit(player.surface, player.rect)
 
     pygame.display.flip()
 
