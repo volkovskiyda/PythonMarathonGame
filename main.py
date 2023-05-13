@@ -8,6 +8,16 @@ import random
 from dataclasses import dataclass
 
 import os
+import sys
+
+def asset_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, 'assets/', relative_path)
+
 
 @dataclass
 class Object:
@@ -53,24 +63,24 @@ FONT = pygame.font.SysFont("Verdana", 24)
 
 main_display = pygame.display.set_mode((WIDTH, HEIGHT))
 
-bg = pygame.transform.scale(pygame.image.load('assets\\background.png'), (WIDTH, HEIGHT))
+bg = pygame.transform.scale(pygame.image.load(asset_path('background.png')), (WIDTH, HEIGHT))
 bg_x1 = 0
 bg_x2 = bg.get_width()
 bg_move = 3
 
-GOOSE_ANIM_PATH = "assets/goose_anim"
+GOOSE_ANIM_PATH = asset_path('goose_anim')
 PLAYER_IMAGES = os.listdir(GOOSE_ANIM_PATH)
 
-player = Player(pygame.image.load('assets/player.png').convert_alpha())
+player = Player(pygame.image.load(asset_path('player.png')).convert_alpha())
 
 def create_enemy():
-    enemy = pygame.image.load('assets/enemy.png').convert_alpha()
+    enemy = pygame.image.load(asset_path('enemy.png')).convert_alpha()
     enemy_rect = pygame.Rect(WIDTH, random.randint(100, HEIGHT -100), *enemy.get_size())
     enemy_move = [random.randint(-8, -4), 0]
     return Movable(enemy, enemy_rect, enemy_move)
 
 def create_bonus():
-    bonus = pygame.image.load('assets/bonus.png').convert_alpha()
+    bonus = pygame.image.load(asset_path('bonus.png')).convert_alpha()
     bonus_rect = pygame.Rect(random.randint(300, WIDTH - 300), 0, *bonus.get_size())
     bonus_move = [0, random.randint(2, 4)]
     return Movable(bonus, bonus_rect, bonus_move)
