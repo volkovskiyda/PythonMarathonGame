@@ -36,7 +36,8 @@ class Player(Object):
 
     def __init__(self, surface: Surface):
         self.surface = surface
-        self.rect = self.surface.get_rect().move(10, HEIGHT / 2)
+        self.rect = self.surface.get_rect()
+        self.rect.center = main_display.get_rect().center
 
     def move_up(self):
         if self.rect.top > 0: self.rect = self.rect.move([0,-7])
@@ -75,13 +76,15 @@ player = Player(pygame.image.load(asset_path('player.png')).convert_alpha())
 
 def create_enemy():
     enemy = pygame.image.load(asset_path('enemy.png')).convert_alpha()
-    enemy_rect = pygame.Rect(WIDTH, random.randint(100, HEIGHT -100), *enemy.get_size())
+    enemy_height = enemy.get_height()
+    enemy_rect = pygame.Rect(WIDTH, random.randint(enemy_height, HEIGHT - enemy_height), *enemy.get_size())
     enemy_move = [random.randint(-8, -4), 0]
     return Movable(enemy, enemy_rect, enemy_move)
 
 def create_bonus():
     bonus = pygame.image.load(asset_path('bonus.png')).convert_alpha()
-    bonus_rect = pygame.Rect(random.randint(300, WIDTH - 300), 0, *bonus.get_size())
+    bonus_width = bonus.get_width()
+    bonus_rect = pygame.Rect(random.randint(bonus_width, WIDTH - bonus_width), -bonus.get_height(), *bonus.get_size())
     bonus_move = [0, random.randint(2, 4)]
     return Movable(bonus, bonus_rect, bonus_move)
 
